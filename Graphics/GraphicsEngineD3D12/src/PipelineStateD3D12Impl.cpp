@@ -494,17 +494,18 @@ void PipelineStateD3D12Impl::CreateDefaultResourceSignature(const PipelineStateC
 
     if (Resources.size())
     {
-        PipelineResourceSignatureDesc ResSignDesc;
-        ResSignDesc.Resources                  = Resources.data();
-        ResSignDesc.NumResources               = static_cast<Uint32>(Resources.size());
-        ResSignDesc.ImmutableSamplers          = LayoutDesc.ImmutableSamplers;
-        ResSignDesc.NumImmutableSamplers       = LayoutDesc.NumImmutableSamplers;
-        ResSignDesc.BindingIndex               = 0;
-        ResSignDesc.SRBAllocationGranularity   = CreateInfo.PSODesc.SRBAllocationGranularity;
-        ResSignDesc.UseCombinedTextureSamplers = pCombinedSamplerSuffix != nullptr;
-        ResSignDesc.CombinedSamplerSuffix      = pCombinedSamplerSuffix;
+        PipelineResourceSignatureCreateInfo ResSignCI = {};
 
-        GetDevice()->CreatePipelineResourceSignature(ResSignDesc, ppImplicitSignature, true);
+        ResSignCI.Desc.Resources                  = Resources.data();
+        ResSignCI.Desc.NumResources               = static_cast<Uint32>(Resources.size());
+        ResSignCI.Desc.ImmutableSamplers          = LayoutDesc.ImmutableSamplers;
+        ResSignCI.Desc.NumImmutableSamplers       = LayoutDesc.NumImmutableSamplers;
+        ResSignCI.Desc.BindingIndex               = 0;
+        ResSignCI.Desc.SRBAllocationGranularity   = CreateInfo.PSODesc.SRBAllocationGranularity;
+        ResSignCI.Desc.UseCombinedTextureSamplers = pCombinedSamplerSuffix != nullptr;
+        ResSignCI.Desc.CombinedSamplerSuffix      = pCombinedSamplerSuffix;
+
+        GetDevice()->CreatePipelineResourceSignature(ResSignCI, ppImplicitSignature, true);
 
         if (*ppImplicitSignature == nullptr)
             LOG_ERROR_AND_THROW("Failed to create resource signature for pipeline state");
@@ -555,38 +556,7 @@ void PipelineStateD3D12Impl::InitRootSignature(const PipelineStateCreateInfo& Cr
     }
     else
     {
-        // TODO: move to base class
-        const auto PipelineType = CreateInfo.PSODesc.PipelineType;
-        for (Uint32 i = 0; i < SignatureCount; ++i)
-        {
-            auto* pSignature = ValidatedCast<PipelineResourceSignatureD3D12Impl>(CreateInfo.ppResourceSignatures[i]);
-            VERIFY(pSignature != nullptr, "Pipeline resource signature at index ", i, " is null. This error should've been caught by ValidatePipelineResourceSignatures.");
-
-            const Uint8 Index = pSignature->GetDesc().BindingIndex;
-
-#ifdef DILIGENT_DEBUG
-            VERIFY(Index < m_Signatures.size(),
-                   "Pipeline resource signature specifies binding index ", Uint32{Index}, " that exceeds the limit (", m_Signatures.size() - 1,
-                   "). This error should've been caught by ValidatePipelineResourceSignatureDesc.");
-
-            VERIFY(m_Signatures[Index] == nullptr,
-                   "Pipeline resource signature '", pSignature->GetDesc().Name, "' at index ", Uint32{Index},
-                   " conflicts with another resource signature '", m_Signatures[Index]->GetDesc().Name,
-                   "' that uses the same index. This error should've been caught by ValidatePipelineResourceSignatures.");
-
-            for (Uint32 s = 0, StageCount = pSignature->GetNumActiveShaderStages(); s < StageCount; ++s)
-            {
-                const auto ShaderType = pSignature->GetActiveShaderStageType(s);
-                VERIFY(IsConsistentShaderType(ShaderType, PipelineType),
-                       "Pipeline resource signature '", pSignature->GetDesc().Name, "' at index ", Uint32{Index},
-                       " has shader stage '", GetShaderTypeLiteralName(ShaderType), "' that is not compatible with pipeline type '",
-                       GetPipelineTypeString(PipelineType), "'.");
-            }
-#endif
-
-            m_SignatureCount    = std::max<Uint8>(m_SignatureCount, Index + 1);
-            m_Signatures[Index] = pSignature;
-        }
+        PipelineResourceSignatureD3D12Impl::CopyResourceSignatures(CreateInfo.PSODesc.PipelineType, SignatureCount, CreateInfo.ppResourceSignatures, m_Signatures, m_SignatureCount);
     }
 
     m_RootSig = GetDevice()->GetRootSignatureCache().GetRootSig(m_Signatures.data(), m_SignatureCount);
