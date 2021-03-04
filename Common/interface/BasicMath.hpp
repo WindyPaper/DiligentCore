@@ -230,6 +230,8 @@ template <class T> struct Vector2
         x{0}, y{0} {}
     Vector2(T _x, T _y) :
         x{_x}, y{_y} {}
+	Vector2(T _x) :
+		x{ _x }, y{ _x } {}
 
     template <typename Y>
     static Vector2 MakeVector(const Y& vals)

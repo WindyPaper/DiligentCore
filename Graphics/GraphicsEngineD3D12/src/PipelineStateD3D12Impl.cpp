@@ -513,8 +513,14 @@ PipelineStateD3D12Impl::PipelineStateD3D12Impl(IReferenceCounters*              
             d3d12PSODesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
 
             HRESULT hr = pd3d12Device->CreateGraphicsPipelineState(&d3d12PSODesc, IID_PPV_ARGS(&m_pd3d12PSO));
-            if (FAILED(hr))
-                LOG_ERROR_AND_THROW("Failed to create pipeline state");
+			if (FAILED(hr))
+			{
+				std::stringstream stream;
+				stream << std::hex << hr;
+				std::string HexString(stream.str());
+
+				LOG_ERROR_AND_THROW("Failed to create pipeline state, error id = ", HexString.c_str());
+			}
         }
 #ifdef D3D12_H_HAS_MESH_SHADER
         else if (m_Desc.PipelineType == PIPELINE_TYPE_MESH)
