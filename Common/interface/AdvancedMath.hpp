@@ -224,6 +224,31 @@ struct BoundBox
     }
 };
 
+struct Dimension
+{
+	union
+	{
+		float3 Min;
+		float3 Size;
+
+		struct
+		{
+			float MinX, MinY, MinZ;
+			float SizeX, SizeY, SizeZ;
+		};
+	};
+
+	float MaxX() const { return MinX + SizeX; }
+	float MaxY() const { return MinY + SizeY; }
+	float MaxZ() const { return MinZ + SizeZ; }
+
+	Dimension()
+	{
+		Min = float3({ 0, 0, 0 });
+		Size = float3({ 0, 0, 0 });
+	}
+};
+
 enum class BoxVisibility
 {
     //  Bounding box is guaranteed to be outside of the view frustum
