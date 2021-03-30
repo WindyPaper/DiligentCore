@@ -222,6 +222,54 @@ struct BoundBox
 
         return NewBB;
     }
+
+	bool IntersectSphereSq(const float3& center, float radiusSq)
+	{
+		return MinDistanceFromPointSq(center) <= radiusSq;
+	}
+
+	float MinDistanceFromPointSq(const float3& point)
+	{
+		float dist = 0.0f;
+
+		if (point.x < Min.x)
+		{
+			float d = point.x - Min.x;
+			dist += d * d;
+		}
+		else
+			if (point.x > Max.x)
+			{
+				float d = point.x - Max.x;
+				dist += d * d;
+			}
+
+		if (point.y < Min.y)
+		{
+			float d = point.y - Min.y;
+			dist += d * d;
+		}
+		else
+			if (point.y > Max.y)
+			{
+				float d = point.y - Max.y;
+				dist += d * d;
+			}
+
+		if (point.z < Min.z)
+		{
+			float d = point.z - Min.z;
+			dist += d * d;
+		}
+		else
+			if (point.z > Max.z)
+			{
+				float d = point.z - Max.z;
+				dist += d * d;
+			}
+
+		return dist;
+	}
 };
 
 struct Dimension
