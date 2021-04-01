@@ -418,9 +418,6 @@ inline BoxVisibility GetBoxVisibility(const ViewFrustum&  ViewFrustum,
                                       const BoundBox&     Box,
                                       FRUSTUM_PLANE_FLAGS PlaneFlags = FRUSTUM_PLANE_FLAG_FULL_FRUSTUM)
 {
-	//test
-	return BoxVisibility::FullyVisible;
-
     int NumPlanesInside = 0;
     int TotalPlanes     = 0;
     for (Uint32 plane_idx = 0; plane_idx < ViewFrustum::NUM_PLANES; ++plane_idx)
